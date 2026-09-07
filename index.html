@@ -5,210 +5,545 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>モンテディオ山形クイズ</title>
 <style>
+  @property --deg {
+    syntax: "<angle>";
+    inherits: false;
+    initial-value: 0deg;
+  }
+
   :root {
-    --blue: #1560bd;
-    --blue-dark: #0d4a94;
-    --orange: #f39800;
-    --bg: #f2f5f9;
-    --card: #ffffff;
-    --text: #1f2933;
-    --muted: #5b6b7c;
-    --correct-bg: #e3f5e8;
-    --correct-fg: #1b7a3d;
-    --wrong-bg: #fde8e8;
-    --wrong-fg: #b4232c;
-    --border: #d7dee7;
+    --ink: #eef4ff;
+    --ink-dim: rgba(233, 241, 255, 0.62);
+    --cyan: #38bdf8;
+    --blue: #3b82f6;
+    --blue-deep: #1e5bd6;
+    --gold: #ffd34d;
+    --ok: #22c55e;
+    --ok-soft: #4ade80;
+    --ng: #f43f5e;
+    --ng-soft: #fb7185;
+    --card-line: rgba(255, 255, 255, 0.14);
   }
 
   * { box-sizing: border-box; }
 
+  html { -webkit-text-size-adjust: 100%; }
+
   body {
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN",
-      "Hiragino Sans", "Noto Sans JP", Meiryo, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.7;
-    -webkit-text-size-adjust: 100%;
-  }
-
-  .wrap {
-    max-width: 560px;
-    margin: 0 auto;
-    padding: 16px 16px 48px;
+      "Hiragino Sans", "Noto Sans JP", "Yu Gothic", Meiryo, sans-serif;
+    color: var(--ink);
+    line-height: 1.75;
+    background:
+      radial-gradient(900px 520px at 50% -8%, rgba(59, 130, 246, 0.55), rgba(59, 130, 246, 0) 60%),
+      radial-gradient(720px 520px at 100% 0%, rgba(56, 189, 248, 0.22), transparent 55%),
+      linear-gradient(180deg, #0a1a3d 0%, #0b1f47 45%, #0a1733 100%);
+    background-attachment: fixed;
     min-height: 100vh;
   }
 
-  header {
-    text-align: center;
-    padding: 20px 12px 12px;
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(180deg,
+      rgba(255, 255, 255, 0.035) 0 2px, transparent 2px 92px);
+    -webkit-mask: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+            mask: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
   }
 
-  header h1 {
-    font-size: 1.25rem;
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 24px 14px 44px;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero { text-align: center; padding: 8px 4px 0; }
+
+  .kicker {
     margin: 0 0 6px;
-    color: var(--blue-dark);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--cyan);
   }
 
-  .sample-note {
-    background: #fff4e0;
-    border: 1px solid var(--orange);
-    color: #8a5a00;
+  .title {
+    margin: 0;
+    font-size: clamp(2rem, 9vw, 2.9rem);
+    font-weight: 900;
+    font-style: italic;
+    line-height: 1.08;
+    letter-spacing: 0.01em;
+    background: linear-gradient(180deg, #ffffff 0%, #a9c7ff 100%);
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent;
+    text-shadow: 0 6px 30px rgba(59, 130, 246, 0.35);
+  }
+
+  .title span {
+    background: linear-gradient(180deg, var(--gold), #f2b21a);
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent;
+  }
+
+  .hero-line {
+    position: relative;
+    height: 2px;
+    margin: 16px 0 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  }
+
+  .hero-line::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 34px;
+    height: 34px;
+    border: 2px solid rgba(255, 255, 255, 0.22);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .source-note {
+    margin: 18px 0 20px;
+    padding: 10px 13px;
+    font-size: 0.75rem;
+    line-height: 1.65;
+    text-align: left;
+    color: var(--ink-dim);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-left: 3px solid var(--gold);
     border-radius: 10px;
-    padding: 10px 12px;
-    font-size: 0.8rem;
-    margin: 12px 0 20px;
   }
+  .source-note strong { color: rgba(255, 255, 255, 0.85); }
 
+  /* ---------- Card ---------- */
   .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px 18px;
-    box-shadow: 0 4px 16px rgba(21, 96, 189, 0.06);
+    position: relative;
+    overflow: hidden;
+    padding: 22px 17px 20px;
+    border-radius: 22px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.035));
+    border: 1px solid var(--card-line);
+    -webkit-backdrop-filter: blur(14px);
+            backdrop-filter: blur(14px);
+    box-shadow:
+      0 30px 60px -22px rgba(0, 0, 0, 0.65),
+      inset 0 1px 0 rgba(255, 255, 255, 0.18);
+    animation: cardIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
-  .progress {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.8rem;
-    color: var(--muted);
-    margin-bottom: 6px;
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--cyan), var(--blue-deep), var(--gold));
   }
+
+  .flake {
+    position: absolute;
+    right: -14px;
+    top: -22px;
+    font-size: 130px;
+    line-height: 1;
+    opacity: 0.06;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* ---------- HUD ---------- */
+  .hud {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .count {
+    display: inline-flex;
+    align-items: baseline;
+    font-weight: 800;
+  }
+  .count::before {
+    content: "Q";
+    margin-right: 5px;
+    font-style: italic;
+    font-weight: 900;
+    font-size: 1.15rem;
+    color: var(--cyan);
+  }
+  .count b { font-size: 1.55rem; font-weight: 900; color: #fff; }
+  .count span { margin-left: 3px; font-size: 0.9rem; font-weight: 700; color: rgba(255, 255, 255, 0.55); }
+
+  .scorepill {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.14);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+  }
+  .scorepill span { font-size: 0.76rem; font-weight: 700; color: rgba(255, 255, 255, 0.7); }
+  .scorepill b { font-size: 1.15rem; font-weight: 900; color: #7dd3fc; }
 
   .bar {
-    height: 6px;
-    background: #e7edf4;
+    height: 10px;
     border-radius: 999px;
+    background: rgba(255, 255, 255, 0.10);
     overflow: hidden;
-    margin-bottom: 18px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.45);
   }
-
   .bar > span {
     display: block;
     height: 100%;
-    background: var(--blue);
-    transition: width 0.3s ease;
+    width: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--cyan), var(--blue));
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.7);
+    transition: width 0.55s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
 
+  /* ---------- Question ---------- */
   .question {
-    font-size: 1.05rem;
-    font-weight: 700;
-    margin: 0 0 16px;
+    margin: 18px 0 16px;
+    font-size: clamp(1.06rem, 4.6vw, 1.22rem);
+    font-weight: 800;
+    line-height: 1.62;
+    color: #fff;
   }
 
-  .choices {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+  /* ---------- Choices ---------- */
+  .choices { display: flex; flex-direction: column; gap: 11px; }
 
   .choice {
-    display: block;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
     width: 100%;
+    min-height: 56px;
+    padding: 14px 15px;
     text-align: left;
-    padding: 14px 16px;
-    font-size: 0.98rem;
     font-family: inherit;
-    color: var(--text);
-    background: #fff;
-    border: 2px solid var(--border);
-    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1.5px solid rgba(255, 255, 255, 0.18);
+    border-radius: 14px;
     cursor: pointer;
-    transition: border-color 0.15s ease, background 0.15s ease;
     -webkit-tap-highlight-color: transparent;
+    transition: transform 0.16s ease, background 0.16s ease,
+      border-color 0.16s ease, box-shadow 0.16s ease;
   }
 
-  .choice:hover:not(:disabled) { border-color: var(--blue); }
+  .choice::before {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: #dbe7ff;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+  }
+  .choices .choice:nth-child(1)::before { content: "A"; }
+  .choices .choice:nth-child(2)::before { content: "B"; }
+  .choices .choice:nth-child(3)::before { content: "C"; }
+  .choices .choice:nth-child(4)::before { content: "D"; }
+
+  .choice:hover:not(:disabled) {
+    background: rgba(56, 189, 248, 0.14);
+    border-color: var(--cyan);
+    transform: translateX(5px);
+    box-shadow: 0 10px 26px -10px rgba(56, 189, 248, 0.55);
+  }
+  .choice:active:not(:disabled) { transform: translateX(2px) scale(0.99); }
   .choice:disabled { cursor: default; }
 
+  .choice:focus-visible {
+    outline: 3px solid #7dd3fc;
+    outline-offset: 2px;
+  }
+
   .choice.is-correct {
-    background: var(--correct-bg);
-    border-color: var(--correct-fg);
-    color: var(--correct-fg);
-    font-weight: 700;
+    background: linear-gradient(180deg, rgba(34, 197, 94, 0.30), rgba(34, 197, 94, 0.16));
+    border-color: var(--ok);
+    color: #eafff1;
+    animation: pop 0.45s cubic-bezier(0.2, 1.4, 0.3, 1);
+  }
+  .choice.is-correct::before { background: var(--ok); border-color: var(--ok); color: #04210f; }
+  .choice.is-correct::after {
+    content: "✓";
+    margin-left: auto;
+    font-weight: 900;
+    font-size: 1.15rem;
+    color: var(--ok-soft);
   }
 
   .choice.is-wrong {
-    background: var(--wrong-bg);
-    border-color: var(--wrong-fg);
-    color: var(--wrong-fg);
-    font-weight: 700;
+    background: linear-gradient(180deg, rgba(244, 63, 94, 0.28), rgba(244, 63, 94, 0.14));
+    border-color: var(--ng);
+    color: #ffe9ee;
+    animation: shake 0.5s ease;
+  }
+  .choice.is-wrong::before { background: var(--ng); border-color: var(--ng); color: #2a0710; }
+  .choice.is-wrong::after {
+    content: "✕";
+    margin-left: auto;
+    font-weight: 900;
+    font-size: 1.05rem;
+    color: var(--ng-soft);
   }
 
+  /* ---------- Feedback ---------- */
   .feedback {
     margin-top: 16px;
-    padding: 14px 16px;
-    border-radius: 12px;
+    padding: 14px 15px;
+    border-radius: 14px;
     font-size: 0.92rem;
+    line-height: 1.68;
+    border: 1px solid;
+    animation: rise 0.35s ease both;
   }
+  .feedback.correct { background: rgba(34, 197, 94, 0.14); border-color: rgba(34, 197, 94, 0.5); }
+  .feedback.wrong { background: rgba(244, 63, 94, 0.13); border-color: rgba(244, 63, 94, 0.45); }
 
-  .feedback.correct { background: var(--correct-bg); color: var(--correct-fg); }
-  .feedback.wrong { background: var(--wrong-bg); color: var(--wrong-fg); }
-
-  .feedback .verdict { font-weight: 700; display: block; margin-bottom: 4px; }
-  .feedback .explain { color: var(--text); }
-
-  .btn {
+  .feedback .verdict {
     display: block;
+    margin-bottom: 6px;
+    font-size: 1.06rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+  }
+  .feedback.correct .verdict { color: var(--ok-soft); }
+  .feedback.wrong .verdict { color: var(--ng-soft); }
+  .feedback .explain { color: #e8eefc; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     width: 100%;
+    min-height: 54px;
     margin-top: 18px;
     padding: 15px 18px;
-    font-size: 1rem;
     font-family: inherit;
-    font-weight: 700;
+    font-size: 1.02rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
     color: #fff;
-    background: var(--blue);
+    background: linear-gradient(180deg, var(--blue), var(--blue-deep));
     border: none;
-    border-radius: 12px;
+    border-radius: 14px;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    box-shadow:
+      0 16px 32px -14px rgba(30, 91, 214, 0.95),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
   }
+  .btn::after { content: "→"; font-weight: 900; }
+  .btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+    box-shadow: 0 22px 38px -14px rgba(30, 91, 214, 1);
+  }
+  .btn:active { transform: translateY(0) scale(0.99); }
+  .btn:focus-visible { outline: 3px solid #7dd3fc; outline-offset: 3px; }
 
-  .btn:hover { background: var(--blue-dark); }
-  .btn.secondary { background: var(--orange); }
-  .btn.secondary:hover { background: #d98600; }
+  .btn.secondary {
+    background: linear-gradient(180deg, var(--cyan), #0ea5e9);
+    box-shadow:
+      0 16px 32px -14px rgba(14, 165, 233, 0.95),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+  .btn.secondary::after { content: "↻"; font-size: 1.15rem; }
 
+  /* ---------- Result ---------- */
   .result { text-align: center; }
-  .result h2 { color: var(--blue-dark); margin: 4px 0 12px; }
-
-  .score {
-    font-size: 2.4rem;
-    font-weight: 800;
-    color: var(--blue);
-    margin: 8px 0;
+  .result .kicker { color: var(--gold); }
+  .result h2 {
+    margin: 2px 0 14px;
+    font-size: clamp(1.5rem, 6.5vw, 2rem);
+    font-weight: 900;
+    font-style: italic;
+    background: linear-gradient(180deg, #ffffff, #a9c7ff);
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent;
   }
 
-  .score small { font-size: 1rem; color: var(--muted); font-weight: 600; }
+  .ring {
+    position: relative;
+    width: clamp(150px, 44vw, 182px);
+    height: clamp(150px, 44vw, 182px);
+    margin: 6px auto 12px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    --deg: 0deg;
+    background: conic-gradient(from -90deg,
+      var(--cyan) 0deg, var(--blue) var(--deg), rgba(255, 255, 255, 0.10) var(--deg));
+    box-shadow: 0 0 44px -6px rgba(56, 189, 248, 0.5);
+    transition: --deg 1.1s cubic-bezier(0.2, 0.8, 0.2, 1);
+    animation: ringIn 0.6s cubic-bezier(0.2, 1.2, 0.3, 1) both;
+  }
+  .ring::before {
+    content: "";
+    position: absolute;
+    inset: 12px;
+    border-radius: 50%;
+    background: #0f2a5e;
+    box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.45);
+  }
+  .ring .num { position: relative; z-index: 1; font-size: 2.9rem; font-weight: 900; color: #fff; line-height: 1; }
+  .ring .den { position: relative; z-index: 1; margin-top: 3px; font-size: 0.9rem; font-weight: 800; color: rgba(255, 255, 255, 0.6); }
 
-  .result-msg { color: var(--muted); font-size: 0.95rem; margin-bottom: 4px; }
+  .result-msg { margin: 4px 0 0; font-size: 0.85rem; color: var(--ink-dim); }
+  #resultComment.comment { margin-top: 8px; font-size: 1.06rem; font-weight: 800; color: #fff; }
+
+  /* ---------- Confetti ---------- */
+  .confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 5; }
+  .confetti i {
+    position: absolute;
+    top: -16px;
+    width: 8px;
+    height: 14px;
+    border-radius: 2px;
+    opacity: 0;
+    animation-name: fall;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+  }
+
+  /* ---------- Sound toggle ---------- */
+  .toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 2px;
+  }
+
+  .sound-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    background: rgba(10, 26, 61, 0.66);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+    box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+  }
+  .sound-toggle:hover { transform: translateY(-1px); border-color: var(--cyan); }
+  .sound-toggle:active { transform: translateY(0) scale(0.97); }
+  .sound-toggle:focus-visible { outline: 3px solid #7dd3fc; outline-offset: 2px; }
+  .sound-toggle.is-off { color: var(--ink-dim); background: rgba(10, 26, 61, 0.5); }
 
   .hidden { display: none; }
 
   footer {
-    text-align: center;
-    font-size: 0.72rem;
-    color: var(--muted);
     margin-top: 22px;
+    text-align: center;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.42);
+  }
+
+  /* ---------- Keyframes ---------- */
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(16px) scale(0.985); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    45% { transform: scale(1.04); }
+    100% { transform: scale(1); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    18% { transform: translateX(-8px); }
+    38% { transform: translateX(7px); }
+    58% { transform: translateX(-5px); }
+    78% { transform: translateX(3px); }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes ringIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fall {
+    0% { opacity: 1; transform: translateY(0) rotate(0); }
+    100% { opacity: 0; transform: translateY(470px) rotate(620deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+    .confetti { display: none; }
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>モンテディオ山形クイズ</h1>
-    <div class="sample-note">
-      出典：<strong>モンテディオ山形 オフィシャルサイト</strong>「クラブ概要／沿革」
-      （montedioyamagata.jp/club/）。設問・選択肢・解説は同ページに記載の内容のみに
-      基づいています。それ以外の情報（選手名・試合記録など）は使用していません。
-    </div>
+  <div class="toolbar">
+    <button id="soundToggle" class="sound-toggle" type="button" aria-pressed="true" title="効果音のオン／オフ">🔊 音ON</button>
+  </div>
+  <header class="hero">
+    <p class="kicker">❄ Montedio Yamagata</p>
+    <h1 class="title">モンテディオ山形<br><span>QUIZ</span></h1>
+    <div class="hero-line"></div>
   </header>
 
+  <div class="source-note">
+    出典：<strong>モンテディオ山形 オフィシャルサイト</strong>「クラブ概要／沿革」
+    （montedioyamagata.jp/club/）。設問・選択肢・解説は同ページに記載の内容のみに
+    基づいています。それ以外の情報（選手名・試合記録など）は使用していません。
+  </div>
+
   <main id="quiz" class="card">
-    <div class="progress">
-      <span id="qCount">第 1 問 / 全 5 問</span>
-      <span id="scoreNow">正解 0</span>
+    <span class="flake">❄</span>
+    <div class="confetti" id="confetti"></div>
+
+    <div class="hud">
+      <div class="count" id="qCount"></div>
+      <div class="scorepill" id="scoreNow"></div>
     </div>
     <div class="bar"><span id="barFill" style="width:0%"></span></div>
 
@@ -224,10 +559,15 @@
   </main>
 
   <section id="result" class="card result hidden">
+    <span class="flake">❄</span>
+    <p class="kicker">❄ Result</p>
     <h2>結果発表</h2>
+    <div class="ring" id="ring">
+      <span class="num" id="finalScore">0</span>
+      <span class="den">/ 5</span>
+    </div>
     <p class="result-msg">5問中の正解数</p>
-    <div class="score"><span id="finalScore">0</span> <small>/ 5</small></div>
-    <p class="result-msg" id="resultComment"></p>
+    <p class="result-msg comment" id="resultComment"></p>
     <button class="btn secondary" id="retryBtn">もう一度挑戦する</button>
   </section>
 
@@ -295,12 +635,104 @@
   let score = 0;
   let answered = false;
 
+  // ===== 効果音：Web Audio API で生成（外部音声ファイル不使用） =====
+  const Sound = (() => {
+    let ctx = null;
+    let enabled = true;
+    try {
+      if (localStorage.getItem("mdy_sound") === "off") enabled = false;
+    } catch (e) {}
+
+    function ensureCtx() {
+      if (ctx) return ctx;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      try { ctx = new AC(); } catch (e) { ctx = null; }
+      return ctx;
+    }
+
+    function resume() {
+      const c = ensureCtx();
+      if (c && c.state === "suspended") c.resume().catch(() => {});
+    }
+
+    // 単音を鳴らす（減衰エンベロープ付き）
+    function tone(c, opt) {
+      const start = opt.start;
+      const dur = opt.dur;
+      const osc = c.createOscillator();
+      const amp = c.createGain();
+      osc.type = opt.type || "sine";
+      osc.frequency.setValueAtTime(opt.freq, start);
+      if (opt.glideTo) osc.frequency.exponentialRampToValueAtTime(opt.glideTo, start + dur);
+      const g = opt.gain || 0.2;
+      amp.gain.setValueAtTime(0.0001, start);
+      amp.gain.exponentialRampToValueAtTime(g, start + 0.012);
+      amp.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+      osc.connect(amp).connect(c.destination);
+      osc.start(start);
+      osc.stop(start + dur + 0.04);
+    }
+
+    function play(kind) {
+      if (!enabled) return;
+      const c = ensureCtx();
+      if (!c) return;
+      if (c.state === "suspended") c.resume().catch(() => {});
+      const t = c.currentTime + 0.03;
+
+      if (kind === "correct") {
+        // 明るい上昇アルペジオ（E5・G#5・B5・E6）＋ きらめき
+        [659.25, 830.61, 987.77, 1318.51].forEach((f, i) => {
+          tone(c, { freq: f, start: t + i * 0.08, dur: 0.22, type: "triangle", gain: 0.22 });
+        });
+        tone(c, { freq: 1975.5, start: t + 0.24, dur: 0.32, type: "sine", gain: 0.07 });
+      } else if (kind === "wrong") {
+        // 短い下降ブザー
+        tone(c, { freq: 220, start: t, dur: 0.15, type: "square", gain: 0.15 });
+        tone(c, { freq: 165, start: t + 0.12, dur: 0.28, type: "square", gain: 0.15, glideTo: 120 });
+      } else if (kind === "fanfare") {
+        // 達成感のある短いファンファーレ（G4×3 → C5、最後にC5・E5・G5の和音）
+        [
+          { f: 392.00, s: 0.00, d: 0.13 },
+          { f: 392.00, s: 0.15, d: 0.13 },
+          { f: 392.00, s: 0.30, d: 0.13 },
+          { f: 523.25, s: 0.46, d: 0.50 }
+        ].forEach((n) => {
+          tone(c, { freq: n.f, start: t + n.s, dur: n.d, type: "triangle", gain: 0.20 });
+          tone(c, { freq: n.f * 2, start: t + n.s, dur: n.d, type: "sine", gain: 0.05 });
+        });
+        [523.25, 659.25, 783.99].forEach((f) => {
+          tone(c, { freq: f, start: t + 0.46, dur: 0.62, type: "triangle", gain: 0.15 });
+        });
+      } else if (kind === "blip") {
+        // トグルON時の確認音
+        tone(c, { freq: 880, start: t, dur: 0.12, type: "sine", gain: 0.14 });
+      }
+    }
+
+    function setEnabled(v) {
+      enabled = !!v;
+      try { localStorage.setItem("mdy_sound", enabled ? "on" : "off"); } catch (e) {}
+      if (enabled) resume();
+    }
+
+    return { play, resume, setEnabled, isEnabled: () => enabled };
+  })();
+
+  function setCount() {
+    el("qCount").innerHTML = `<b>${current + 1}</b><span>/ ${QUESTIONS.length}</span>`;
+  }
+  function setScore() {
+    el("scoreNow").innerHTML = `<span>正解</span><b>${score}</b>`;
+  }
+
   function renderQuestion() {
     answered = false;
     const item = QUESTIONS[current];
 
-    el("qCount").textContent = `第 ${current + 1} 問 / 全 ${QUESTIONS.length} 問`;
-    el("scoreNow").textContent = `正解 ${score}`;
+    setCount();
+    setScore();
     el("barFill").style.width = `${(current / QUESTIONS.length) * 100}%`;
 
     el("questionText").textContent = item.q;
@@ -342,7 +774,13 @@
     el("verdict").textContent = isCorrect ? "○ 正解！" : "× 不正解";
     el("explain").textContent = item.explain;
 
-    el("scoreNow").textContent = `正解 ${score}`;
+    setScore();
+    Sound.play(isCorrect ? "correct" : "wrong");
+    if (isCorrect) burstConfetti();
+    if (navigator.vibrate) {
+      try { navigator.vibrate(isCorrect ? 35 : [18, 40, 18]); } catch (e) {}
+    }
+
     el("nextBtn").className = "btn";
   }
 
@@ -358,25 +796,84 @@
   function showResult() {
     quizBox.classList.add("hidden");
     resultBox.classList.remove("hidden");
-    el("finalScore").textContent = score;
+
+    el("ring").style.setProperty("--deg", (score / QUESTIONS.length) * 360 + "deg");
+    animateCount(el("finalScore"), score);
 
     let msg;
     if (score === QUESTIONS.length) msg = "全問正解！すばらしい！";
     else if (score >= 3) msg = "いい調子です！";
     else msg = "もう一度挑戦してみましょう。";
     el("resultComment").textContent = msg;
+
+    if (score >= 3) burstConfetti(resultBox);
+    setTimeout(() => Sound.play("fanfare"), 200);
   }
 
   function restart() {
     current = 0;
     score = 0;
+    el("ring").style.setProperty("--deg", "0deg");
     resultBox.classList.add("hidden");
     quizBox.classList.remove("hidden");
     renderQuestion();
   }
 
+  function animateCount(node, target) {
+    node.textContent = "0";
+    if (target <= 0) return;
+    let n = 0;
+    const step = () => {
+      n++;
+      node.textContent = String(n);
+      if (n < target) setTimeout(step, 170);
+    };
+    setTimeout(step, 260);
+  }
+
+  function burstConfetti(host) {
+    const layer = host ? host.querySelector(".confetti") || makeLayer(host) : el("confetti");
+    if (!layer) return;
+    const colors = ["#38bdf8", "#3b82f6", "#ffd34d", "#ffffff", "#22c55e"];
+    for (let i = 0; i < 16; i++) {
+      const p = document.createElement("i");
+      p.style.left = (Math.random() * 100).toFixed(1) + "%";
+      p.style.background = colors[i % colors.length];
+      p.style.animationDelay = (Math.random() * 0.15).toFixed(2) + "s";
+      p.style.animationDuration = (0.9 + Math.random() * 0.6).toFixed(2) + "s";
+      p.style.transform = `rotate(${Math.floor(Math.random() * 360)}deg)`;
+      layer.appendChild(p);
+      setTimeout(() => p.remove(), 1900);
+    }
+  }
+
+  function makeLayer(host) {
+    const d = document.createElement("div");
+    d.className = "confetti";
+    host.appendChild(d);
+    return d;
+  }
+
   el("nextBtn").addEventListener("click", goNext);
   el("retryBtn").addEventListener("click", restart);
+
+  // ---- 効果音トグル ----
+  const soundToggle = el("soundToggle");
+  function syncSoundToggle() {
+    const on = Sound.isEnabled();
+    soundToggle.textContent = on ? "🔊 音ON" : "🔇 音OFF";
+    soundToggle.classList.toggle("is-off", !on);
+    soundToggle.setAttribute("aria-pressed", String(on));
+  }
+  soundToggle.addEventListener("click", () => {
+    const next = !Sound.isEnabled();
+    Sound.setEnabled(next);
+    syncSoundToggle();
+    if (next) Sound.play("blip");
+  });
+  // モバイルのオーディオ制限対策：最初のタップで AudioContext を起こす
+  document.addEventListener("pointerdown", () => Sound.resume(), { once: true });
+  syncSoundToggle();
 
   renderQuestion();
 </script>
